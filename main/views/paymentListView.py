@@ -1,5 +1,5 @@
 
-from main.models import *
+from main.models import Ip_whitelist,Payments,Parameters
 from main.serializers import PayementsSerializer
 
 from django.http import Http404
@@ -8,7 +8,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
 
+from datetime import datetime, timedelta,timezone
+from django.db.models import Avg, Count, Min, Sum
+
 import logging
+import pytz
 
 class Payment_list_view(APIView):
 
@@ -29,8 +33,9 @@ class Payment_list_view(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        params = Parameters.objects.first()
+        
         logger = logging.getLogger(__name__) 
-
         logger.info(request.data)
 
         remote_ip = request.META["REMOTE_ADDR"]
@@ -42,7 +47,6 @@ class Payment_list_view(APIView):
 
         #check payments do not exceed max amount per 24 hour period
         
-
         payments_list = request.data
         return_value_errors = []
         return_value = []
@@ -54,6 +58,24 @@ class Payment_list_view(APIView):
             if not serializer.is_valid():
                 return_value_errors.append( {"data": p,
                                              "error": serializer.errors})
+            else:
+                amount = float(serializer.data["amount"])
+                max_daily_earnings = params.max_daily_earnings
+                email = serializer.data["email"].strip().lower()
+
+                d_minus24 = datetime.now(pytz.UTC) - timedelta(hours=24)
+
+                earnings_last24 = Payments.objects.filter(timestamp__gte=d_minus24) \
+                                                  .filter(email = email)\
+                                                  .aggregate(Sum('amount')) 
+
+                logger.info(f"Earnings last 24 hours {email}, {earnings_last24}")
+
+                earnings_total = amount + float(earnings_last24['amount__sum'])
+
+                if earnings_total > max_daily_earnings :
+                     return_value_errors.append( {"data": p,
+                                                  "error": "Exceeds max daily earnings"})
 
         #if any invalid return list
         if len(return_value_errors)>0:
@@ -64,6 +86,7 @@ class Payment_list_view(APIView):
             serializer = PayementsSerializer(data=p)
 
             if serializer.is_valid():
+                serializer.validated_data["email"] = serializer.validated_data["email"].strip().lower()
                 serializer.save()
                 return_value.append(serializer.data)            
         
