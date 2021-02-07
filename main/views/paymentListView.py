@@ -1,5 +1,5 @@
 
-from main.models import Payments
+from main.models import *
 from main.serializers import PayementsSerializer
 
 from django.http import Http404
@@ -15,6 +15,15 @@ class Payment_list_view(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
+        logger = logging.getLogger(__name__) 
+
+        remote_ip = request.META["REMOTE_ADDR"]
+        logger.info(f'Get payments list: {remote_ip}')
+
+        #check for IP on white list
+        if not Ip_whitelist.objects.filter(ip_address=remote_ip).exists():
+            return Response("Invalid IP Address", status=status.HTTP_401_UNAUTHORIZED)
+        
         payments = Payments.objects.all()
         serializer = PayementsSerializer(payments, many=True)
         return Response(serializer.data)
@@ -23,6 +32,16 @@ class Payment_list_view(APIView):
         logger = logging.getLogger(__name__) 
 
         logger.info(request.data)
+
+        remote_ip = request.META["REMOTE_ADDR"]
+        logger.info(f'Get payments list: {remote_ip}')
+
+        #check for IP on white list
+        if not Ip_whitelist.objects.filter(ip_address=remote_ip).exists():
+            return Response("Invalid IP Address", status=status.HTTP_401_UNAUTHORIZED)
+
+        #check payments do not exceed max amount per 24 hour period
+        
 
         payments_list = request.data
         return_value_errors = []

@@ -4,7 +4,7 @@ from main.models import Payments
 class PayementsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payments
-        fields = ['id', 'email', 'amount', 'memo']
+        fields = ['id', 'email', 'amount', 'memo','timestamp']
 
 # class PayementsSerializer(serializers.Serializer):
 #     id = serializers.IntegerField(read_only=True)
