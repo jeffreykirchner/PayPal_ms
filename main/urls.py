@@ -1,10 +1,12 @@
+from rest_framework.urlpatterns import format_suffix_patterns
+
 from django.urls import path,include
 from main import views
-from rest_framework.urlpatterns import format_suffix_patterns
+
 
 urlpatterns = [
     path('payments/', views.Payment_list_view.as_view()),
-    #path('payments/<int:pk>/', views.Payment_view.as_view()),
+    path('payments/<start_date>/<end_date>', views.Payment_range_view.as_view()),
 ]
 
 urlpatterns += [
