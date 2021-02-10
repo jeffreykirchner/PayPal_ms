@@ -16,11 +16,13 @@ class Payment_range_view(APIView):
     Payments within a date range
     '''
     #get the payments from the specified date ranage.
-    def get(self, request, start_date,end_date, format=None):
+    def get(self, request, start_date,end_date):
         '''
         Get payments within the specified date range
         '''
-        logger = logging.getLogger(__name__) 
+        logger = logging.getLogger(__name__)
+
+        logger.info(f"Get payments between: {start_date} and {end_date}")
 
         #check ip on white list
         ip_whitelist = get_whitelist_ip(request)
