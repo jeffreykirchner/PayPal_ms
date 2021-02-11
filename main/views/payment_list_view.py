@@ -24,7 +24,7 @@ class Payment_list_view(APIView):
         '''
         Get all payments in list format
         '''
-        logger = logging.getLogger(__name__) 
+        logger = logging.getLogger(__name__)
 
         #check ip on white list
         ip_whitelist = get_whitelist_ip(request)
@@ -56,10 +56,12 @@ class Payment_list_view(APIView):
         logger.info(f'Store payments list: {ip_whitelist}')
 
         #check payments do not exceed max amount per 24 hour period
-        
+
         payments_list = request.data
         return_value_errors = []
         return_value = []
+
+        #logger.info(f'Payments List: {payments_list}')
 
         #check all valid
         for payment in payments_list:
@@ -67,7 +69,7 @@ class Payment_list_view(APIView):
 
             if not serializer.is_valid():
                 return_value_errors.append( {"data": payment,
-                                             "error": serializer.errors})
+                                             "detail": serializer.errors})
             else:
                 amount = float(serializer.data["amount"])
                 max_daily_earnings = params.max_daily_earnings
@@ -77,7 +79,7 @@ class Payment_list_view(APIView):
 
                 earnings_last24 = Payments.objects.filter(timestamp__gte=d_minus24) \
                                                   .filter(email = email)\
-                                                  .aggregate(Sum('amount')) 
+                                                  .aggregate(Sum('amount'))
 
                 logger.info(f"Earnings last 24 hours {email}, {earnings_last24}")
 
@@ -88,7 +90,7 @@ class Payment_list_view(APIView):
 
                 if earnings_total > max_daily_earnings :
                     return_value_errors.append( {"data": payment,
-                                                 "error": "Exceeds max daily earnings"})
+                                                 "detail": "Exceeds max daily earnings"})
 
         #if any invalid return list
         if len(return_value_errors)>0:
@@ -100,8 +102,10 @@ class Payment_list_view(APIView):
 
             if serializer.is_valid():
                 serializer.validated_data["email"] = serializer.validated_data["email"].strip().lower()
-                serializer.validated_data["ip_whitelist"] = ip_whitelist.first()
+                serializer.validated_data["ip_whitelist"] = ip_whitelist
                 serializer.save()
                 return_value.append(serializer.data)
         
+        #send payments to paypal
+
         return Response(return_value, status=status.HTTP_201_CREATED)
