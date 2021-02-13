@@ -5,7 +5,7 @@ from main import views
 
 
 urlpatterns = [
-    path('payments/', views.Payment_list_view.as_view()),
+    path('payments/', views.PaymentListView.as_view()),
     path('payments/<start_date>/<end_date>', views.Payment_range_view.as_view()),
 ]
 

@@ -14,10 +14,12 @@ from django.db.models import  Sum
 
 from main.models import Payments,Parameters
 from main.serializers import PayementsSerializer
-from main.globals import get_whitelist_ip
+from main.globals import get_whitelist_ip, paypal_get
 
-class Payment_list_view(APIView):
-
+class PaymentListView(APIView):
+    '''
+    return a list of all payments or take a list for payment
+    '''
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -46,10 +48,18 @@ class Payment_list_view(APIView):
         logger = logging.getLogger(__name__)
         logger.info(request.data)
 
+        #check paypal auth
+        val = paypal_get('v1/identity/oauth2/userinfo?schema=paypalv1.1')
+
+        if val.get('user_id',-1) == -1:
+            logger.info('PayPal Authorization Error')
+            return Response({"detail": "PayPal Authorization Error"},
+                             status=status.HTTP_401_UNAUTHORIZED)    
+
         #check ip on white list
         ip_whitelist = get_whitelist_ip(request)
         if not ip_whitelist:
-            logger.info('Store payments list IP Not Found')
+            logger.warning('Store payments list IP Not Found')
             return Response({"detail": "Invalid IP Address"},
                              status=status.HTTP_401_UNAUTHORIZED)
 

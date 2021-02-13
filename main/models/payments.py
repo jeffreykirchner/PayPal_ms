@@ -1,11 +1,15 @@
+# import logging
+# import traceback
+
 from django.db import models
-import logging
-import traceback
 
 from . import Ip_whitelist
 
 #gloabal parameters for site
 class Payments(models.Model):
+    '''
+    payments model
+    '''
 
     email =  models.EmailField(max_length = 250)                    #email of payee
     amount = models.DecimalField(decimal_places=2, max_digits=5)     #payment amount
@@ -23,3 +27,4 @@ class Payments(models.Model):
         verbose_name = 'Payment'
         verbose_name_plural = 'Payments'
         ordering = ['-timestamp']
+        
