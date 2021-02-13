@@ -14,7 +14,7 @@ from django.db.models import  Sum
 
 from main.models import Payments,Parameters
 from main.serializers import PayementsSerializer
-from main.globals import get_whitelist_ip, paypal_get
+from main.globals import get_whitelist_ip, paypal_action
 
 class PaymentListView(APIView):
     '''
@@ -49,7 +49,7 @@ class PaymentListView(APIView):
         logger.info(request.data)
 
         #check paypal auth
-        val = paypal_get('v1/identity/oauth2/userinfo?schema=paypalv1.1')
+        val = paypal_action('v1/identity/oauth2/userinfo?schema=paypalv1.1',"get",{})
 
         if val.get('user_id',-1) == -1:
             logger.info('PayPal Authorization Error')
@@ -117,5 +117,6 @@ class PaymentListView(APIView):
                 return_value.append(serializer.data)
         
         #send payments to paypal
+        val = paypal_action('v1/payments/payouts',"post",{})
 
         return Response(return_value, status=status.HTTP_201_CREATED)

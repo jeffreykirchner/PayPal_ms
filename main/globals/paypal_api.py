@@ -42,7 +42,7 @@ def paypal_auth():
     
     return False
 
-def paypal_get(val):
+def paypal_action(val, mode, data):
     '''
     check if paypal token needs refresh
     val: https://api-m.sandbox.paypal.com/v2/{val}
@@ -55,13 +55,18 @@ def paypal_get(val):
     headers = {"Content-Type": "application/json",
                "Authorization": f"Bearer {prm.paypal_token}"}
 
-    req = requests.get(f'{settings.PAYPAL_URL}/{val}',
-                       headers = headers)
+    if mode == "get":
+        req = requests.get(f'{settings.PAYPAL_URL}/{val}',
+                           headers = headers)
+    else:
+        req = requests.post(f'{settings.PAYPAL_URL}/{val}',
+                            headers = headers,
+                            data = data)
     
     #check failed auth code
     if req.status_code == 401:
         if paypal_auth():
-            return paypal_get(val)
+            return paypal_action(val, mode, data)
              
         logger.info('paypal_get: Authorization failed')
         return {'error':'Authorization failed'}
