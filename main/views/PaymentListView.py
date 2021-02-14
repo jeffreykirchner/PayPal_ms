@@ -52,16 +52,16 @@ class PaymentListView(APIView):
         payments_info = request.data["info"]
 
         #check paypal auth
-        val = paypal_action(f'/v1/payments/payouts/{payments_info["payment_id"]}',"get",{})
+        # val = paypal_action(f'/v1/payments/payouts/{payments_info["payment_id"]}',"get",{})
 
-        if val.get('name',-1) == -1:
-            logger.info('PayPal Authorization Error')
-            return Response({"detail": "PayPal Authorization Error"},
-                             status=status.HTTP_401_UNAUTHORIZED)    
-        elif val.get('name') != "INVALID_RESOURCE_ID":
-            logger.info('PayPal Double Payment')
-            return Response({"detail": "PayPal Double Payment"},
-                             status=status.HTTP_409_CONFLICT)  
+        # if val.get('name',-1) == -1:
+        #     logger.info('PayPal Authorization Error')
+        #     return Response({"detail": "PayPal Authorization Error"},
+        #                      status=status.HTTP_401_UNAUTHORIZED)    
+        # elif val.get('name') != "INVALID_RESOURCE_ID":
+        #     logger.info('PayPal Double Payment')
+        #     return Response({"detail": "PayPal Double Payment"},
+        #                      status=status.HTTP_409_CONFLICT)  
 
         #check ip on white list
         ip_whitelist = get_whitelist_ip(request)
@@ -79,6 +79,8 @@ class PaymentListView(APIView):
         #logger.info(f'Payments List: {payments_list}')
 
         #check all valid
+        items=[]
+        counter = 1
         for payment in payments_list:
             serializer = PayementsSerializer(data=payment)
 
@@ -107,31 +109,23 @@ class PaymentListView(APIView):
                     return_value_errors.append( {"data": payment,
                                                  "detail": "Exceeds max daily earnings"})
 
+                #paypal items
+                items.append({"amount": {
+                                        "value": serializer.data["amount"],
+                                        "currency": "USD"
+                                    },
+                            "recipient_type": "EMAIL",    
+                            "note": "Thanks",    
+                            "sender_item_id": f'{payments_info["payment_id"]}_{counter}',
+                            "receiver": serializer.data["email"]
+                            })
+                
+                counter += 1
+
         #if any invalid return list
         if len(return_value_errors)>0:
             return Response(return_value_errors, status=status.HTTP_400_BAD_REQUEST)
 
-        #store payments
-        items=[]
-        for payment in payments_list:
-            serializer = PayementsSerializer(data=payment)
-
-            if serializer.is_valid():
-                serializer.validated_data["email"] = serializer.validated_data["email"].strip().lower()
-                serializer.validated_data["ip_whitelist"] = ip_whitelist
-                serializer.save()
-                return_value.append(serializer.data)
-
-                items.append({"amount": {
-                                         "value": serializer.data["amount"],
-                                         "currency": "USD"
-                                        },
-                              "recipient_type": "EMAIL",    
-                              "note": "Thanks",    
-                              "sender_item_id": f'{serializer.data["ip_whitelist"]}_{serializer.data["id"]}',
-                              "receiver": serializer.data["email"]
-                             })
-        
         #send payments to paypal
         data = {}
         data["sender_batch_header"] = {"sender_batch_id" : payments_info["payment_id"],
@@ -142,5 +136,25 @@ class PaymentListView(APIView):
         logger.info(f'Payment list post data: {data}')
 
         val = paypal_action('v1/payments/payouts', "post", data)
+
+        #check for duplicate payment
+        if val.get("name","not found") == "USER_BUSINESS_ERROR":
+
+            logger.info('PayPal Double Payment')
+            return Response({"detail": "PayPal Double Payment"},
+                             status=status.HTTP_409_CONFLICT)
+        
+        #store payments
+        for payment in payments_list:
+            serializer = PayementsSerializer(data=payment)
+
+            if serializer.is_valid():
+                serializer.validated_data["email"] = serializer.validated_data["email"].strip().lower()
+                serializer.validated_data["ip_whitelist"] = ip_whitelist
+                serializer.validated_data["payout_batch_id_local"] = payments_info["payment_id"]
+                serializer.validated_data["payout_batch_id_paypal"] = val["batch_header"]["payout_batch_id"]
+
+                serializer.save()
+                return_value.append(serializer.data)
 
         return Response(return_value, status=status.HTTP_201_CREATED)

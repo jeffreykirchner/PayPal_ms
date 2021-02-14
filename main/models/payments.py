@@ -11,11 +11,14 @@ class Payments(models.Model):
     payments model
     '''
 
-    email =  models.EmailField(max_length = 250)                    #email of payee
+    email =  models.EmailField(max_length = 250)                     #email of payee
     amount = models.DecimalField(decimal_places=2, max_digits=5)     #payment amount
     memo = models.CharField(max_length = 250,default = "")           #momo recorded about payment
     
     ip_whitelist = models.ForeignKey(Ip_whitelist,on_delete=models.CASCADE,related_name="ip_whitelist")
+
+    payout_batch_id_local = models.CharField(max_length = 250,default = "")    #batch payment id locally assinged
+    payout_batch_id_paypal = models.CharField(max_length = 250,default = "")   #batch payment id asigned by paypal
 
     timestamp = models.DateTimeField(auto_now_add= True)
     updated= models.DateTimeField(auto_now= True)
