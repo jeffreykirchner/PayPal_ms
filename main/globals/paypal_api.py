@@ -48,7 +48,7 @@ def paypal_action(val, mode, data):
     val: https://api-m.sandbox.paypal.com/v2/{val}
     '''
     logger = logging.getLogger(__name__)
-    logger.info(f"paypal_get {val}")
+    logger.info(f"paypal_action {val}")
 
     prm = Parameters.objects.first()
 
@@ -59,20 +59,21 @@ def paypal_action(val, mode, data):
         req = requests.get(f'{settings.PAYPAL_URL}/{val}',
                            headers = headers)
     else:
+        logger.info("post")
         req = requests.post(f'{settings.PAYPAL_URL}/{val}',
                             headers = headers,
-                            data = data)
+                            json = data)
     
     #check failed auth code
     if req.status_code == 401:
         if paypal_auth():
             return paypal_action(val, mode, data)
              
-        logger.info('paypal_get: Authorization failed')
+        logger.info('paypal_action: Authorization failed')
         return {'error':'Authorization failed'}
     
     req_json = req.json()
-    logger.info(f'paypal_get {req_json}')
+    logger.info(f'paypal_action {req_json}')
 
     return req_json
         

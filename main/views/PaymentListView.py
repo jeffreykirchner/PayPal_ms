@@ -48,13 +48,20 @@ class PaymentListView(APIView):
         logger = logging.getLogger(__name__)
         logger.info(request.data)
 
-        #check paypal auth
-        val = paypal_action('v1/identity/oauth2/userinfo?schema=paypalv1.1',"get",{})
+        payments_list = request.data["items"]
+        payments_info = request.data["info"]
 
-        if val.get('user_id',-1) == -1:
+        #check paypal auth
+        val = paypal_action(f'/v1/payments/payouts/{payments_info["payment_id"]}',"get",{})
+
+        if val.get('name',-1) == -1:
             logger.info('PayPal Authorization Error')
             return Response({"detail": "PayPal Authorization Error"},
                              status=status.HTTP_401_UNAUTHORIZED)    
+        elif val.get('name') != "INVALID_RESOURCE_ID":
+            logger.info('PayPal Double Payment')
+            return Response({"detail": "PayPal Double Payment"},
+                             status=status.HTTP_409_CONFLICT)  
 
         #check ip on white list
         ip_whitelist = get_whitelist_ip(request)
@@ -66,8 +73,6 @@ class PaymentListView(APIView):
         logger.info(f'Store payments list: {ip_whitelist}')
 
         #check payments do not exceed max amount per 24 hour period
-
-        payments_list = request.data
         return_value_errors = []
         return_value = []
 
@@ -107,6 +112,7 @@ class PaymentListView(APIView):
             return Response(return_value_errors, status=status.HTTP_400_BAD_REQUEST)
 
         #store payments
+        items=[]
         for payment in payments_list:
             serializer = PayementsSerializer(data=payment)
 
@@ -115,8 +121,26 @@ class PaymentListView(APIView):
                 serializer.validated_data["ip_whitelist"] = ip_whitelist
                 serializer.save()
                 return_value.append(serializer.data)
+
+                items.append({"amount": {
+                                         "value": serializer.data["amount"],
+                                         "currency": "USD"
+                                        },
+                              "recipient_type": "EMAIL",    
+                              "note": "Thanks",    
+                              "sender_item_id": f'{serializer.data["ip_whitelist"]}_{serializer.data["id"]}',
+                              "receiver": serializer.data["email"]
+                             })
         
         #send payments to paypal
-        val = paypal_action('v1/payments/payouts',"post",{})
+        data = {}
+        data["sender_batch_header"] = {"sender_batch_id" : payments_info["payment_id"],
+                                       "email_subject" : payments_info["email_subject"],
+                                       "email_message" : payments_info["email_message"]}
+        data["items"] = items
+
+        logger.info(f'Payment list post data: {data}')
+
+        val = paypal_action('v1/payments/payouts', "post", data)
 
         return Response(return_value, status=status.HTTP_201_CREATED)
