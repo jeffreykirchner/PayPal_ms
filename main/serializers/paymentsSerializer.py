@@ -7,6 +7,9 @@ from main.models import Payments
 #         fields = ['id', 'email', 'amount', 'memo','timestamp']
 
 class PayementsSerializer(serializers.Serializer):
+    '''
+    serialize REST version of payment model
+    '''
     id = serializers.IntegerField(read_only=True)
     
     email = serializers.EmailField(max_length = 250)
@@ -14,6 +17,7 @@ class PayementsSerializer(serializers.Serializer):
     memo = serializers.CharField(max_length = 250) 
     timestamp = serializers.DateTimeField(format="%m/%d/%Y %H:%M:%S %Z",required=False)
     ip_whitelist = serializers.IPAddressField(required=False)
+    note = serializers.CharField(max_length = 250)
 
     def create(self, validated_data):
         """

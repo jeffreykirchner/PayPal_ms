@@ -115,7 +115,7 @@ class PaymentListView(APIView):
                                         "currency": "USD"
                                     },
                             "recipient_type": "EMAIL",    
-                            "note": "Thanks",    
+                            "note": serializer.data["note"],    
                             "sender_item_id": f'{payments_info["payment_id"]}_{counter}',
                             "receiver": serializer.data["email"]
                             })
@@ -128,9 +128,8 @@ class PaymentListView(APIView):
 
         #send payments to paypal
         data = {}
-        data["sender_batch_header"] = {"sender_batch_id" : payments_info["payment_id"],
-                                       "email_subject" : payments_info["email_subject"],
-                                       "email_message" : payments_info["email_message"]}
+        data["sender_batch_header"] = {"sender_batch_id" : f'{ip_whitelist}_{payments_info["payment_id"]}',
+                                       "email_subject" : payments_info["email_subject"]}
         data["items"] = items
 
         logger.info(f'Payment list post data: {data}')

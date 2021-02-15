@@ -14,6 +14,7 @@ class Payments(models.Model):
     email =  models.EmailField(max_length = 250)                     #email of payee
     amount = models.DecimalField(decimal_places=2, max_digits=5)     #payment amount
     memo = models.CharField(max_length = 250,default = "")           #momo recorded about payment
+    note = models.CharField(max_length = 250,default = "")           #note shown in body of the email
     
     ip_whitelist = models.ForeignKey(Ip_whitelist,on_delete=models.CASCADE,related_name="ip_whitelist")
 
