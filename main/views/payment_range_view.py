@@ -38,12 +38,12 @@ class Payment_range_view(APIView):
                              status=status.HTTP_400_BAD_REQUEST)
 
         #check ip on white list
-        ip_whitelist = get_whitelist_ip(request)
-        if not ip_whitelist:
-            logger.info('Get payments list IP Not Found')
-            return Response({"detail": "Invalid IP Address"}, status=status.HTTP_401_UNAUTHORIZED)
+        #ip_whitelist = get_whitelist_ip(request)
+        # if not ip_whitelist:
+        #     logger.info('Get payments list IP Not Found')
+        #     return Response({"detail": "Invalid IP Address"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        logger.info('Get payments list: {ip_whitelist}')
+        logger.info(f'Get payments list: {request.user}')
 
         payments = Payments.objects.filter(timestamp__gte = d_start_date)\
                                    .filter(timestamp__lte = d_end_date)

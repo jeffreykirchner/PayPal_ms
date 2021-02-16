@@ -10,6 +10,8 @@ def get_whitelist_ip(request):
 
     ip_whitelist=Ip_whitelist.objects.filter(ip_address=remote_ip)
 
+    ip_whitelist.first()
+
     if ip_whitelist.count() == 0:
         logger.warning(f"get_whitelist_ip not found: {remote_ip}")
         return None

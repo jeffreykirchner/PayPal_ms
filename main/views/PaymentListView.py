@@ -29,10 +29,10 @@ class PaymentListView(APIView):
         logger = logging.getLogger(__name__)
 
         #check ip on white list
-        ip_whitelist = get_whitelist_ip(request)
-        if not ip_whitelist:
-            logger.info('Get payments list IP Not Found')
-            return Response({"detail": "Invalid IP Address"}, status=status.HTTP_401_UNAUTHORIZED)
+        # ip_whitelist = get_whitelist_ip(request)
+        # if not ip_whitelist:
+        #     logger.info('Get payments list IP Not Found')
+        #     return Response({"detail": "Invalid IP Address"}, status=status.HTTP_401_UNAUTHORIZED)
 
         logger.info('Get payments list: {ip_whitelist}')
 
@@ -64,13 +64,15 @@ class PaymentListView(APIView):
         #                      status=status.HTTP_409_CONFLICT)  
 
         #check ip on white list
-        ip_whitelist = get_whitelist_ip(request)
-        if not ip_whitelist:
-            logger.warning('Store payments list IP Not Found')
-            return Response({"detail": "Invalid IP Address"},
-                             status=status.HTTP_401_UNAUTHORIZED)
+        # ip_whitelist = get_whitelist_ip(request)
+        # if not ip_whitelist:
+        #     logger.warning('Store payments list IP Not Found')
+        #     return Response({"detail": "Invalid IP Address"},
+        #                      status=status.HTTP_401_UNAUTHORIZED)
 
-        logger.info(f'Store payments list: {ip_whitelist}')
+        user = request.user
+
+        logger.info(f'Store payments list: {user}')
 
         #check payments do not exceed max amount per 24 hour period
         return_value_errors = []
@@ -128,7 +130,7 @@ class PaymentListView(APIView):
 
         #send payments to paypal
         data = {}
-        data["sender_batch_header"] = {"sender_batch_id" : f'{ip_whitelist}_{payments_info["payment_id"]}',
+        data["sender_batch_header"] = {"sender_batch_id" : f'{user}_{payments_info["payment_id"]}',
                                        "email_subject" : payments_info["email_subject"]}
         data["items"] = items
 
@@ -149,7 +151,7 @@ class PaymentListView(APIView):
 
             if serializer.is_valid():
                 serializer.validated_data["email"] = serializer.validated_data["email"].strip().lower()
-                serializer.validated_data["ip_whitelist"] = ip_whitelist
+                serializer.validated_data["app"] = user
                 serializer.validated_data["payout_batch_id_local"] = payments_info["payment_id"]
                 serializer.validated_data["payout_batch_id_paypal"] = val["batch_header"]["payout_batch_id"]
 
