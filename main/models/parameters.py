@@ -16,8 +16,8 @@ class Parameters(models.Model):
     max_daily_earnings = models.DecimalField(decimal_places=2, max_digits=5,default = 100)    #max money that can be paid to a subject per year  
     site_URL = models.CharField(max_length = 200,default = "https://www.google.com/")         #site URL used for display in emails
     
-    paypal_token = models.CharField(max_length = 200,default = "https://www.google.com/")        #site URL used for display in emails
-    paypal_note = models.CharField(max_length = 200,default = "Thanks for your participation!")         #note sent along with paypal payment
+    paypal_token = models.CharField(max_length = 200,default = "asdf123")                            #token used for paypal requests
+    #paypal_note = models.CharField(max_length = 200,default = "Thanks for your participation!")     #note sent along with paypal payment
 
     timestamp = models.DateTimeField(auto_now_add= True)
     updated= models.DateTimeField(auto_now= True)

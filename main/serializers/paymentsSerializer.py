@@ -15,8 +15,8 @@ class PayementsSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length = 250)
     amount = serializers.DecimalField(max_digits=5,decimal_places=2)
     memo = serializers.CharField(max_length = 250) 
-    timestamp = serializers.DateTimeField(format="%m/%d/%Y %H:%M:%S %Z",required=False)
-    ip_whitelist = serializers.IPAddressField(required=False)
+    timestamp = serializers.DateTimeField(format="%m/%d/%Y %H:%M:%S %Z", required=False)
+    app = serializers.CharField(required=False)
     note = serializers.CharField(max_length = 250)
 
     def create(self, validated_data):

@@ -5,6 +5,8 @@ from django.db import models
 
 from . import Ip_whitelist
 
+from django.contrib.auth.models import User
+
 #gloabal parameters for site
 class Payments(models.Model):
     '''
@@ -16,7 +18,7 @@ class Payments(models.Model):
     memo = models.CharField(max_length = 250,default = "")           #momo recorded about payment
     note = models.CharField(max_length = 250,default = "")           #note shown in body of the email
     
-    ip_whitelist = models.ForeignKey(Ip_whitelist,on_delete=models.CASCADE,related_name="ip_whitelist")
+    app = models.ForeignKey(User,on_delete=models.CASCADE,related_name="app_name")
 
     payout_batch_id_local = models.CharField(max_length = 250,default = "")    #batch payment id locally assinged
     payout_batch_id_paypal = models.CharField(max_length = 250,default = "")   #batch payment id asigned by paypal
