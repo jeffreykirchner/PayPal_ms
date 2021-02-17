@@ -11,7 +11,7 @@ from rest_framework import status
 
 from main.models import Payments
 from main.serializers import PayementsSerializer
-from main.globals import get_whitelist_ip, make_tz_aware_utc
+from main.globals import make_tz_aware_utc
 
 class PaymentRangeView(APIView):
     '''

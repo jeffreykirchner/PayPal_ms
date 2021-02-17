@@ -14,7 +14,7 @@ from django.db.models import  Sum
 
 from main.models import Payments,Parameters
 from main.serializers import PayementsSerializer
-from main.globals import get_whitelist_ip, paypal_action
+from main.globals import paypal_action
 
 class PaymentListView(APIView):
     '''

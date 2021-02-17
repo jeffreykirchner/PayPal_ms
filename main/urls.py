@@ -1,8 +1,13 @@
+'''
+URL Patterns
+'''
 from rest_framework.urlpatterns import format_suffix_patterns
+
+from django.views.generic.base import RedirectView
 
 from django.urls import path,include
 from main import views
-from django.views.generic.base import RedirectView
+
 
 
 urlpatterns = [
