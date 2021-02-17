@@ -34,7 +34,19 @@ class PaymentListView(APIView):
         #     logger.info('Get payments list IP Not Found')
         #     return Response({"detail": "Invalid IP Address"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        logger.info('Get payments list: {ip_whitelist}')
+        logger.info(f'Get payments list: {request.user}')
+
+        #get paypal balance
+        #data = {}
+        # data["sender_batch_header"] = {"sender_batch_id" : f'{user}_{payments_info["payment_id"]}',
+        #                                "email_subject" : payments_info["email_subject"]}
+        # data["items"] = items
+
+        # logger.info(f'Payment list post data: {data}')
+
+        #val = paypal_action('v2/wallet/balance-accounts', "get", data)
+
+        #logger.info(val)
 
         payments = Payments.objects.all()
         serializer = PayementsSerializer(payments, many=True)

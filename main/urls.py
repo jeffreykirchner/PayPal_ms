@@ -7,7 +7,7 @@ from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('payments/', views.PaymentListView.as_view()),
-    path('payments/<start_date>/<end_date>', views.Payment_range_view.as_view()),
+    path('payments/<start_date>/<end_date>', views.PaymentRangeView.as_view()),
 
     #txt
     path('robots.txt', views.RobotsTxt, name='robotsTxt'),
