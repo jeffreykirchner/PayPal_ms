@@ -1,13 +1,19 @@
+'''
+URL Patterns
+'''
 from rest_framework.urlpatterns import format_suffix_patterns
+
+from django.views.generic.base import RedirectView
 
 from django.urls import path,include
 from main import views
-from django.views.generic.base import RedirectView
-
 
 urlpatterns = [
+
+    path('', views.root_path),
+
     path('payments/', views.PaymentListView.as_view()),
-    path('payments/<start_date>/<end_date>', views.Payment_range_view.as_view()),
+    path('payments/<start_date>/<end_date>', views.PaymentRangeView.as_view()),
 
     #txt
     path('robots.txt', views.RobotsTxt, name='robotsTxt'),
