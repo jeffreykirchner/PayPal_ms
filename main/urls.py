@@ -8,9 +8,10 @@ from django.views.generic.base import RedirectView
 from django.urls import path,include
 from main import views
 
-
-
 urlpatterns = [
+
+    path('', views.root_path),
+
     path('payments/', views.PaymentListView.as_view()),
     path('payments/<start_date>/<end_date>', views.PaymentRangeView.as_view()),
 
