@@ -2,3 +2,4 @@ logs/*
 ESIPayPalMSEnv/*
 .vscode/*
 *.pyc
+fixtures

@@ -12,16 +12,16 @@ class PayementsSerializer(serializers.Serializer):
     '''
     id = serializers.IntegerField(read_only=True)
     
-    email = serializers.EmailField(max_length = 250)
-    amount = serializers.DecimalField(max_digits=5,decimal_places=2)
-    memo = serializers.CharField(max_length = 250) 
+    email = serializers.EmailField(max_length=250)
+    amount = serializers.DecimalField(max_digits=5, decimal_places=2)
+    memo = serializers.CharField(max_length=250) 
     timestamp = serializers.DateTimeField(format="%m/%d/%Y %H:%M:%S %Z", required=False)
     app = serializers.CharField(required=False)
     note = serializers.CharField(max_length = 250)
 
     def create(self, validated_data):
         """
-        Create and return a new 'Payements' instance, given the validated data.
+        Create and return a new 'Payments' instance, given the validated data.
         """
         return Payments.objects.create(**validated_data)
 

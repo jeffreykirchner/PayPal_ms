@@ -3,8 +3,6 @@
 
 from django.db import models
 
-from . import Ip_whitelist
-
 from django.contrib.auth.models import User
 
 #gloabal parameters for site

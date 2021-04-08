@@ -12,7 +12,7 @@ from rest_framework import permissions
 
 from django.db.models import  Sum
 
-from main.models import Payments,Parameters
+from main.models import Payments, Parameters
 from main.serializers import PayementsSerializer
 from main.globals import paypal_action
 
@@ -27,12 +27,6 @@ class PaymentListView(APIView):
         Get all payments in list format
         '''
         logger = logging.getLogger(__name__)
-
-        #check ip on white list
-        # ip_whitelist = get_whitelist_ip(request)
-        # if not ip_whitelist:
-        #     logger.info('Get payments list IP Not Found')
-        #     return Response({"detail": "Invalid IP Address"}, status=status.HTTP_401_UNAUTHORIZED)
 
         logger.info(f'Get payments list: {request.user}')
 
@@ -54,120 +48,115 @@ class PaymentListView(APIView):
 
     def post(self, request):
         '''
-        Add new payments from a list
+        handle /payments post
         '''
-        params = Parameters.objects.first()
         logger = logging.getLogger(__name__)
         logger.info(request.data)
 
-        payments_list = request.data["items"]
-        payments_info = request.data["info"]
+        result = take_payment_list(request.user, request.data)
 
-        #check paypal auth
-        # val = paypal_action(f'/v1/payments/payouts/{payments_info["payment_id"]}',"get",{})
+        return Response(result['text'], status=result['code'])
 
-        # if val.get('name',-1) == -1:
-        #     logger.info('PayPal Authorization Error')
-        #     return Response({"detail": "PayPal Authorization Error"},
-        #                      status=status.HTTP_401_UNAUTHORIZED)
-        # elif val.get('name') != "INVALID_RESOURCE_ID":
-        #     logger.info('PayPal Double Payment')
-        #     return Response({"detail": "PayPal Double Payment"},
-        #                      status=status.HTTP_409_CONFLICT)
+def take_payment_list(user, data):
+    '''
+    Add new payments from a list
+    {"items": [{"email": "1234@abc.edu", "amount": 3, "note": "hello note", "memo": "hello memo"}], "info": {"payment_id": "1",  "email_subject":"email subject"}}
+    '''
 
-        #check ip on white list
-        # ip_whitelist = get_whitelist_ip(request)
-        # if not ip_whitelist:
-        #     logger.warning('Store payments list IP Not Found')
-        #     return Response({"detail": "Invalid IP Address"},
-        #                      status=status.HTTP_401_UNAUTHORIZED)
+    params = Parameters.objects.first()
 
-        user = request.user
+    logger = logging.getLogger(__name__)
 
-        logger.info(f'Store payments list: {user}')
+    payments_list = data["items"]
+    payments_info = data["info"]
 
-        #check payments do not exceed max amount per 24 hour period
-        return_value_errors = []
-        return_value = []
+    logger.info(f'Store payments list: {user}')
 
-        #logger.info(f'Payments List: {payments_list}')
+    #check payments do not exceed max amount per 24 hour period
+    return_value_errors = []
+    return_value = []
 
-        #check all valid
-        items=[]
-        counter = 1
-        for payment in payments_list:
-            serializer = PayementsSerializer(data=payment)
+    logger.info(f'Payments List: {payments_list}')
 
-            if not serializer.is_valid():
-                return_value_errors.append( {"data": payment,
-                                             "detail": serializer.errors})
+    #check all valid
+    items=[]
+    counter = 1
+    for payment in payments_list:
+        serializer = PayementsSerializer(data=payment)
+
+        if not serializer.is_valid():
+            return_value_errors.append( {"data": payment,
+                                         "detail": serializer.errors})
+        else:
+            amount = float(serializer.data["amount"])
+            max_daily_earnings = params.max_daily_earnings
+            email = serializer.data["email"].strip().lower()
+
+            d_minus24 = datetime.now(pytz.UTC) - timedelta(hours=24)
+
+            earnings_last24 = Payments.objects.filter(timestamp__gte=d_minus24) \
+                                                .filter(email = email)\
+                                                .aggregate(Sum('amount'))
+
+            logger.info(f"Earnings last 24 hours {email}, {earnings_last24}")
+
+            if earnings_last24['amount__sum']:
+                earnings_total = amount + float(earnings_last24['amount__sum'])
             else:
-                amount = float(serializer.data["amount"])
-                max_daily_earnings = params.max_daily_earnings
-                email = serializer.data["email"].strip().lower()
+                earnings_total = amount
 
-                d_minus24 = datetime.now(pytz.UTC) - timedelta(hours=24)
-
-                earnings_last24 = Payments.objects.filter(timestamp__gte=d_minus24) \
-                                                  .filter(email = email)\
-                                                  .aggregate(Sum('amount'))
-
-                logger.info(f"Earnings last 24 hours {email}, {earnings_last24}")
-
-                if earnings_last24['amount__sum']:
-                    earnings_total = amount + float(earnings_last24['amount__sum'])
-                else:
-                    earnings_total = amount
-
-                if earnings_total > max_daily_earnings :
-                    return_value_errors.append( {"data": payment,
-                                                 "detail": "Exceeds max daily earnings"})
-
+            if earnings_total > max_daily_earnings :
+                return_value_errors.append( {"data": payment,
+                                             "detail": "Exceeds max daily earnings"})
+            else:
                 #paypal items
                 items.append({"amount": {
-                                        "value": serializer.data["amount"],
-                                        "currency": "USD"
-                                    },
+                                    "value": serializer.data["amount"],
+                                    "currency": "USD"
+                                },
                             "recipient_type": "EMAIL",
                             "note": serializer.data["note"],
                             "sender_item_id": f'{payments_info["payment_id"]}_{counter}',
                             "receiver": serializer.data["email"]
-                            })
+                        })
 
                 counter += 1
 
-        #if any invalid return list
-        if len(return_value_errors)>0:
-            return Response(return_value_errors, status=status.HTTP_400_BAD_REQUEST)
+    #if any invalid return list
+    if len(return_value_errors)>0:
+        return {'text' : return_value_errors,
+                'code' : status.HTTP_400_BAD_REQUEST}
 
-        #send payments to paypal
-        data = {}
-        data["sender_batch_header"] = {"sender_batch_id" : f'{user}_{payments_info["payment_id"]}',
-                                       "email_subject" : payments_info["email_subject"]}
-        data["items"] = items
+    #send payments to paypal
+    data = {}
+    data["sender_batch_header"] = {"sender_batch_id" : f'{user}_{payments_info["payment_id"]}',
+                                   "email_subject" : payments_info["email_subject"]}
+    data["items"] = items
 
-        logger.info(f'Payment list post data: {data}')
+    logger.info(f'Payment list post data: {data}')
 
-        val = paypal_action('v1/payments/payouts', "post", data)
+    val = paypal_action('v1/payments/payouts', "post", data)
 
-        #check for duplicate payment
-        if val.get("name","not found") == "USER_BUSINESS_ERROR":
+    #check for duplicate payment
+    if val.get("name","not found") == "USER_BUSINESS_ERROR":
 
-            logger.info('PayPal Double Payment')
-            return Response({"detail": "PayPal Double Payment"},
-                             status=status.HTTP_409_CONFLICT)
+        logger.info('PayPal Double Payment')
+        return {'text' : {"detail": "PayPal Double Payment"},
+                'code' : status.HTTP_409_CONFLICT}
+        
+    #store payments
+    for payment in payments_list:
+        serializer = PayementsSerializer(data=payment)
 
-        #store payments
-        for payment in payments_list:
-            serializer = PayementsSerializer(data=payment)
+        if serializer.is_valid():
+            serializer.validated_data["email"] = serializer.validated_data["email"].strip().lower()
+            serializer.validated_data["app"] = user
+            serializer.validated_data["payout_batch_id_local"] = payments_info["payment_id"]
+            serializer.validated_data["payout_batch_id_paypal"] = val["batch_header"]["payout_batch_id"]
 
-            if serializer.is_valid():
-                serializer.validated_data["email"] = serializer.validated_data["email"].strip().lower()
-                serializer.validated_data["app"] = user
-                serializer.validated_data["payout_batch_id_local"] = payments_info["payment_id"]
-                serializer.validated_data["payout_batch_id_paypal"] = val["batch_header"]["payout_batch_id"]
+            serializer.save()
+            return_value.append(serializer.data)
 
-                serializer.save()
-                return_value.append(serializer.data)
+    return {'text' : return_value, 'code' : status.HTTP_201_CREATED}
 
-        return Response(return_value, status=status.HTTP_201_CREATED)
+
