@@ -28,12 +28,6 @@ class PaymentListView(APIView):
         '''
         logger = logging.getLogger(__name__)
 
-        #check ip on white list
-        # ip_whitelist = get_whitelist_ip(request)
-        # if not ip_whitelist:
-        #     logger.info('Get payments list IP Not Found')
-        #     return Response({"detail": "Invalid IP Address"}, status=status.HTTP_401_UNAUTHORIZED)
-
         logger.info(f'Get payments list: {request.user}')
 
         #get paypal balance
@@ -55,32 +49,17 @@ class PaymentListView(APIView):
     def post(self, request):
         '''
         Add new payments from a list
+        payments_list : [{"email":__,"amount":__,"note":__,"memo":__, "payment_id":__}]
         '''
+        
+        #{"items": [{"email": "1234@abc.edu", "amount": 3, "note": "hello note", "memo": "hello memo"}], "info": {"payment_id": "1",  "email_subject":"email subject"}}
+
         params = Parameters.objects.first()
         logger = logging.getLogger(__name__)
         logger.info(request.data)
 
         payments_list = request.data["items"]
         payments_info = request.data["info"]
-
-        #check paypal auth
-        # val = paypal_action(f'/v1/payments/payouts/{payments_info["payment_id"]}',"get",{})
-
-        # if val.get('name',-1) == -1:
-        #     logger.info('PayPal Authorization Error')
-        #     return Response({"detail": "PayPal Authorization Error"},
-        #                      status=status.HTTP_401_UNAUTHORIZED)
-        # elif val.get('name') != "INVALID_RESOURCE_ID":
-        #     logger.info('PayPal Double Payment')
-        #     return Response({"detail": "PayPal Double Payment"},
-        #                      status=status.HTTP_409_CONFLICT)
-
-        #check ip on white list
-        # ip_whitelist = get_whitelist_ip(request)
-        # if not ip_whitelist:
-        #     logger.warning('Store payments list IP Not Found')
-        #     return Response({"detail": "Invalid IP Address"},
-        #                      status=status.HTTP_401_UNAUTHORIZED)
 
         user = request.user
 
@@ -90,7 +69,7 @@ class PaymentListView(APIView):
         return_value_errors = []
         return_value = []
 
-        #logger.info(f'Payments List: {payments_list}')
+        logger.info(f'Payments List: {payments_list}')
 
         #check all valid
         items=[]
@@ -122,19 +101,19 @@ class PaymentListView(APIView):
                 if earnings_total > max_daily_earnings :
                     return_value_errors.append( {"data": payment,
                                                  "detail": "Exceeds max daily earnings"})
-
-                #paypal items
-                items.append({"amount": {
+                else:
+                    #paypal items
+                    items.append({"amount": {
                                         "value": serializer.data["amount"],
                                         "currency": "USD"
                                     },
-                            "recipient_type": "EMAIL",
-                            "note": serializer.data["note"],
-                            "sender_item_id": f'{payments_info["payment_id"]}_{counter}',
-                            "receiver": serializer.data["email"]
+                              "recipient_type": "EMAIL",
+                              "note": serializer.data["note"],
+                              "sender_item_id": f'{payments_info["payment_id"]}_{counter}',
+                              "receiver": serializer.data["email"]
                             })
 
-                counter += 1
+                    counter += 1
 
         #if any invalid return list
         if len(return_value_errors)>0:
