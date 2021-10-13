@@ -77,16 +77,6 @@ LOGGING = {
     },
 }
 
-#emails
-#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'   #log email to console
-EMAIL_HOST = 'exchange.chapman.edu'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-EMAIL_HOST_USER_NAME = 'ESI Recruiter, Chapman University'
-EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = os.environ['EMAIL_HOST_USER']
-
 #paypal
 PAYPAL_CLIENT_ID = os.environ['PAYPAL_CLIENT_ID']
 PAYPAL_SECRET = os.environ['PAYPAL_SECRET']
