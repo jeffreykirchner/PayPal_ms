@@ -8,6 +8,7 @@ import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import permissions
 
 from main.models import Payments
 from main.serializers import PayementsSerializer
@@ -17,8 +18,10 @@ class PaymentRangeView(APIView):
     '''
     Payments within a date range
     '''
+    permission_classes = [permissions.IsAuthenticated]
+
     #get the payments from the specified date ranage.
-    def get(self, request, start_date, end_date):
+    def get(self, request, start_date, end_date, source_time_zone):
         '''
         Get payments within the specified date range
         '''
@@ -30,8 +33,8 @@ class PaymentRangeView(APIView):
             d_start_date = datetime.strptime(start_date,"%Y-%m-%d")
             d_end_date = datetime.strptime(end_date,"%Y-%m-%d")
 
-            d_start_date = make_tz_aware_utc(d_start_date, 0, 0, 0)
-            d_end_date = make_tz_aware_utc(d_end_date, 23, 59, 59)
+            d_start_date = make_tz_aware_utc(d_start_date, 0, 0, 0, source_time_zone)
+            d_end_date = make_tz_aware_utc(d_end_date, 23, 59, 59, source_time_zone)
 
         except Exception  as exce:
             return Response({"detail": f"Invalid Dates: {start_date} {end_date}, Format: YYYY-MM-DD"},
