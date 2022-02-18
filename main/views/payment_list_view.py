@@ -151,8 +151,8 @@ def take_payment_list(user, data):
         if serializer.is_valid():
             serializer.validated_data["email"] = serializer.validated_data["email"].strip().lower()
             serializer.validated_data["app"] = user
-            serializer.validated_data["payout_batch_id_local"] = payments_info["payment_id"]
-            serializer.validated_data["payout_batch_id_paypal"] = val["batch_header"]["payout_batch_id"]
+            serializer.validated_data["payout_batch_id_local"] = payments_info["payment_id"]                #id number given to paypal 
+            serializer.validated_data["payout_batch_id_paypal"] = val["batch_header"]["payout_batch_id"]    #id number returned frmo paypal
 
             serializer.save()
             return_value.append(serializer.data)
