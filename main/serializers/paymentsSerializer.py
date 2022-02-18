@@ -19,6 +19,9 @@ class PayementsSerializer(serializers.Serializer):
     app = serializers.CharField(required=False)
     note = serializers.CharField(max_length = 250)
 
+    payout_batch_id_local = serializers.CharField(max_length = 250,default = "", required=False)    #batch payment id locally assinged
+    payout_batch_id_paypal = serializers.CharField(max_length = 250,default = "", required=False)   #batch payment id asigned by paypal
+
     def create(self, validated_data):
         """
         Create and return a new 'Payments' instance, given the validated data.
