@@ -15,7 +15,7 @@ class PaymentMemoText(APIView):
     '''
     Return payments with text in memo
     '''
-    permission_classes = [permissions.IsAuthenticated]
+    #permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, search_text):
         '''
