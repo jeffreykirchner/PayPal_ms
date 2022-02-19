@@ -4,3 +4,4 @@ from .payment_range_view import *
 from .txt import *
 from .root_path import *
 from .payment_memo_text import PaymentMemoText
+from .payment_batch_status import PaymentBatchStatus

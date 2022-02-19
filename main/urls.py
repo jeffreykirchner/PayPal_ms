@@ -15,6 +15,7 @@ urlpatterns = [
     path('payments/', views.PaymentListView.as_view()),
     path('payments/<str:start_date>/<str:end_date>/<path:source_time_zone>', views.PaymentRangeView.as_view()),
     path('payments/memo_search/<str:search_text>/', views.PaymentMemoText.as_view()),
+    path('payments/get_batch_status/<str:batch_id>/', views.PaymentBatchStatus.as_view()),
 
     #txt
     path('robots.txt', views.RobotsTxt, name='robotsTxt'),
