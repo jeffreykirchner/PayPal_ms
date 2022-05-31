@@ -27,6 +27,7 @@ def paypal_auth():
     req = requests.post(f'{settings.PAYPAL_URL}/v1/oauth2/token',
                        headers = headers,
                        data = data,
+                       timeout=20,
                        auth=(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_SECRET))
 
     req_json = req.json()
@@ -57,12 +58,14 @@ def paypal_action(val, mode, data):
 
     if mode == "get":
         req = requests.get(f'{settings.PAYPAL_URL}/{val}',
-                           headers = headers)
+                           headers = headers,
+                           timeout=20)
     else:
         logger.info("post")
         req = requests.post(f'{settings.PAYPAL_URL}/{val}',
                             headers = headers,
-                            json = data)
+                            json = data,
+                            timeout=20)
     
     #check failed auth code
     if req.status_code == 401:
