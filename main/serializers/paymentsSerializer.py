@@ -18,6 +18,7 @@ class PayementsSerializer(serializers.Serializer):
     timestamp = serializers.DateTimeField(format="%m/%d/%Y %H:%M:%S %Z", required=False)
     app = serializers.CharField(required=False)
     note = serializers.CharField(max_length = 250)
+    sender_item_id = serializers.CharField(max_length = 250, required=False)
 
     payout_batch_id_local = serializers.CharField(max_length = 250,default = "", required=False)    #batch payment id locally assinged
     payout_batch_id_paypal = serializers.CharField(max_length = 250,default = "", required=False)   #batch payment id asigned by paypal

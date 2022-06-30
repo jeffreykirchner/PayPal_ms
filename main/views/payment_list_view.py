@@ -110,13 +110,16 @@ def take_payment_list(user, data):
                                              "detail": "Exceeds max daily earnings"})
             else:
                 #paypal items
+                sender_item_id = f'{user.username}_{serializer.data["sender_item_id"]}' if serializer.data.get("sender_item_id", None) \
+                                 else f'{payments_info["payment_id"]}_{counter}'  
+
                 items.append({"amount": {
                                     "value": serializer.data["amount"],
                                     "currency": "USD"
                                 },
                             "recipient_type": "EMAIL",
                             "note": serializer.data["note"],
-                            "sender_item_id": f'{payments_info["payment_id"]}_{counter}',
+                            "sender_item_id": sender_item_id,
                             "receiver": serializer.data["email"]
                         })
 
