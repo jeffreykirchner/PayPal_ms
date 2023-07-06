@@ -3,3 +3,4 @@ ESIPayPalMSEnv/*
 .vscode/*
 *.pyc
 fixtures
+db_dumps/
