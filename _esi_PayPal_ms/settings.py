@@ -1,5 +1,5 @@
 """
-Django settings for ESIPayPalMS project.
+Django settings for _esi_PayPal_ms project.
 
 """
 from pathlib import Path
@@ -43,7 +43,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'ESIPayPalMS.urls'
+ROOT_URLCONF = '_esi_PayPal_ms.urls'
 
 TEMPLATES = [
     {
@@ -61,7 +61,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ESIPayPalMS.wsgi.application'
+WSGI_APPLICATION = '_esi_PayPal_ms.wsgi.application'
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Password validation
