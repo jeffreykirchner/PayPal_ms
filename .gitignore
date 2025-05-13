@@ -3,4 +3,4 @@ _esi_PayPal_msEnv/*
 .vscode/*
 *.pyc
 fixtures
-db_dumps/
+database_dumps/
